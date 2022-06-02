@@ -54,6 +54,10 @@ module SamlIdp
       Saml::XML::Namespaces::AuthnContext::ClassRef::PASSWORD
     end
 
+    def configure_by_metadata
+      MetadataLoader.new(SamlIdp.config.persisted_metadata_getter)
+    end
+
     def encode_authn_response(principal, opts = {})
       response_id = get_saml_response_id
       reference_id = opts[:reference_id] || get_saml_reference_id
