@@ -11,6 +11,7 @@ module SamlIdp
     attribute :fingerprint
     attribute :metadata_url
     attribute :validate_signature
+    attribute :sign_authn_request
     attribute :acs_url
     attribute :assertion_consumer_logout_service_url
     attribute :response_hosts
@@ -23,7 +24,7 @@ module SamlIdp
 
     def valid_signature?(doc, require_signature = false)
       if require_signature || attributes[:validate_signature]
-        doc.valid_signature?(cert, fingerprint)
+        doc.valid_signature?(fingerprint)
       else
         true
       end
