@@ -11,6 +11,7 @@ module SamlIdp
     attr_accessor :audience_uri
     attr_accessor :saml_request_id
     attr_accessor :saml_acs_url
+    attr_accessor :recipient_url
     attr_accessor :algorithm
     attr_accessor :private_key
     attr_accessor :pv_key_password
@@ -33,6 +34,7 @@ module SamlIdp
       audience_uri:,
       saml_request_id:,
       saml_acs_url:,
+      recipient_url:,
       algorithm:,
       authn_context_classref:,
       public_cert:,
@@ -55,6 +57,7 @@ module SamlIdp
       self.audience_uri = audience_uri
       self.saml_request_id = saml_request_id
       self.saml_acs_url = saml_acs_url
+      self.recipient_url = recipient_url
       self.algorithm = algorithm
       self.private_key = private_key
       self.pv_key_password = pv_key_password
@@ -119,6 +122,7 @@ module SamlIdp
           audience_uri: audience_uri,
           saml_request_id: saml_request_id,
           saml_acs_url: saml_acs_url,
+          recipient_url: recipient_url,
           raw_algorithm: algorithm,
           authn_context_classref: authn_context_classref,
           public_cert: public_cert,

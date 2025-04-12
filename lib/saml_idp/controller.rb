@@ -61,6 +61,7 @@ module SamlIdp
       private_key = opts[:private_key] || SamlIdp.config.secret_key
       pv_key_password = opts[:pv_key_password] || SamlIdp.config.password
       acs_url = opts[:acs_url] || saml_acs_url
+      recipient_url = opts[:recipient_url] || saml_acs_url
       expiry = opts[:expiry] || 60*60
       session_expiry = opts[:session_expiry]
       encryption_opts = opts[:encryption] || nil
@@ -80,6 +81,7 @@ module SamlIdp
         audience_uri: audience_uri,
         saml_request_id: saml_request_id,
         saml_acs_url: acs_url,
+        recipient_url: recipient_url,
         algorithm: (opts[:algorithm] || algorithm || default_algorithm),
         authn_context_classref: my_authn_context_classref,
         public_cert: public_cert,

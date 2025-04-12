@@ -11,6 +11,7 @@ module SamlIdp
     attr_accessor :audience_uri
     attr_accessor :saml_request_id
     attr_accessor :saml_acs_url
+    attr_accessor :recipient_url
     attr_accessor :raw_algorithm
     attr_accessor :authn_context_classref
     attr_accessor :expiry
@@ -31,6 +32,7 @@ module SamlIdp
         audience_uri:,
         saml_request_id:,
         saml_acs_url:,
+        recipient_url:,
         raw_algorithm:,
         authn_context_classref:,
         public_cert:,
@@ -48,6 +50,7 @@ module SamlIdp
       self.audience_uri = audience_uri
       self.saml_request_id = saml_request_id
       self.saml_acs_url = saml_acs_url
+      self.recipient_url = recipient_url
       self.raw_algorithm = raw_algorithm
       self.authn_context_classref = authn_context_classref
       self.expiry = expiry
@@ -82,7 +85,7 @@ module SamlIdp
               confirmation_hash = {}
               confirmation_hash[:InResponseTo] = saml_request_id unless saml_request_id.nil?
               confirmation_hash[:NotOnOrAfter] = not_on_or_after_subject
-              confirmation_hash[:Recipient] = saml_acs_url
+              confirmation_hash[:Recipient] = recipient_url
 
               confirmation.SubjectConfirmationData "", confirmation_hash
             end
