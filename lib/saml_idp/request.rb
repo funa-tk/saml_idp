@@ -157,7 +157,7 @@ module SamlIdp
     def valid_external_signature?
       return true if authn_request? && !validate_auth_request_signature?
 
-      cert = OpenSSL::X509::Certificate.new(service_provider.cert)
+      cert = OpenSSL::X509::Certificate.new(Base64.decode64(service_provider.cert))
 
       sha_version = sig_algorithm =~ /sha(.*?)$/i && $1.to_i
       raw_signature = Base64.decode64(signature)
