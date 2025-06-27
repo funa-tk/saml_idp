@@ -23,7 +23,7 @@ module SamlIdp
       new(inflated, external_attributes)
     end
 
-    attr_accessor :raw_xml, :saml_request, :signature, :sig_algorithm, :relay_state
+    attr_accessor :raw_xml, :saml_request, :signature, :sig_algorithm, :relay_state, :ulid
 
     delegate :config, to: :SamlIdp
     private :config
@@ -36,6 +36,7 @@ module SamlIdp
       self.relay_state = external_attributes[:relay_state]
       self.sig_algorithm = external_attributes[:sig_algorithm]
       self.signature = external_attributes[:signature]
+      self.ulid = external_attributes[:ulid]
       self.errors = []
     end
 
@@ -186,7 +187,7 @@ module SamlIdp
 
     def service_provider
       return unless issuer.present?
-      @_service_provider ||= ServiceProvider.new((service_provider_finder[issuer] || {}).merge(identifier: issuer))
+      @_service_provider ||= ServiceProvider.new((service_provider_finder[ulid] || {}).merge(identifier: issuer))
     end
 
     def issuer

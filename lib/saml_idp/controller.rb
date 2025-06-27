@@ -43,7 +43,8 @@ module SamlIdp
         saml_request: raw_saml_request,
         signature: signature,
         sig_algorithm: sig_algorithm,
-        relay_state: relay_state
+        relay_state: relay_state,
+        ulid: params[:app_ulid]
       )
     end
 
