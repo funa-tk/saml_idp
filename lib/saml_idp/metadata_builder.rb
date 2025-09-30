@@ -2,6 +2,7 @@ require 'saml_idp/name_id_formatter'
 require 'saml_idp/attribute_decorator'
 require 'saml_idp/algorithmable'
 require 'saml_idp/signable'
+
 module SamlIdp
   class MetadataBuilder
     include Algorithmable
@@ -15,50 +16,34 @@ module SamlIdp
     def fresh
       builder = Builder::XmlMarkup.new
       generated_reference_id do
-        builder.EntityDescriptor ID: reference_string,
-          xmlns: Saml::XML::Namespaces::METADATA,
-          "xmlns:saml" => Saml::XML::Namespaces::ASSERTION,
-          "xmlns:ds" => Saml::XML::Namespaces::SIGNATURE,
-          entityID: entity_id do |entity|
-            sign entity
+        builder.tag!("md:EntityDescriptor",
+                     ID: reference_string,
+                     "xmlns:md" => Saml::XML::Namespaces::METADATA,
+                     entityID: entity_id ) do |entity|
+          sign entity
 
-            entity.IDPSSODescriptor protocolSupportEnumeration: protocol_enumeration do |descriptor|
-              build_key_descriptor descriptor
-              build_endpoint descriptor, [
-                { tag: 'SingleLogoutService', url: single_logout_service_post_location, bind: 'HTTP-POST' }, 
-                { tag: 'SingleLogoutService', url: single_logout_service_redirect_location, bind: 'HTTP-Redirect'}
-              ]
-              build_name_id_formats descriptor
-              build_endpoint descriptor, [
-                { tag: 'SingleSignOnService', url: single_service_post_location, bind: 'HTTP-POST' }, 
-                { tag: 'SingleSignOnService', url: single_service_redirect_location, bind: 'HTTP-Redirect'}
-              ]
-              build_attribute descriptor
-            end
-
-            entity.AttributeAuthorityDescriptor protocolSupportEnumeration: protocol_enumeration do |authority_descriptor|
-              build_key_descriptor authority_descriptor
-              build_organization authority_descriptor
-              build_contact authority_descriptor
-              build_endpoint authority_descriptor, [
-                { tag: 'AttributeService', url: attribute_service_location, bind: 'HTTP-Redirect' }
-              ]
-              build_name_id_formats authority_descriptor
-              build_attribute authority_descriptor
-            end
-
-            build_organization entity
-            build_contact entity
+          entity.tag!("md:IDPSSODescriptor", protocolSupportEnumeration: protocol_enumeration) do |descriptor|
+            build_key_descriptor descriptor
+            build_endpoint descriptor, [
+              { tag: 'md:SingleLogoutService', url: single_logout_service_post_location, bind: 'HTTP-POST' },
+              { tag: 'md:SingleLogoutService', url: single_logout_service_redirect_location, bind: 'HTTP-Redirect'}
+            ]
+            build_name_id_formats descriptor
+            build_endpoint descriptor, [
+              { tag: 'md:SingleSignOnService', url: single_service_post_location, bind: 'HTTP-POST' },
+            ]
+            build_attribute descriptor
           end
+        end
       end
     end
     alias_method :raw, :fresh
 
     def build_key_descriptor(el)
-      el.KeyDescriptor use: "signing" do |key_descriptor|
-        key_descriptor.KeyInfo xmlns: Saml::XML::Namespaces::SIGNATURE do |key_info|
-          key_info.X509Data do |x509|
-            x509.X509Certificate x509_certificate
+      el.tag!("md:KeyDescriptor", use: "signing") do |key_descriptor|
+        key_descriptor.tag!("ds:KeyInfo", "xmlns:ds"=> Saml::XML::Namespaces::SIGNATURE) do |key_info|
+          key_info.tag!("ds:X509Data") do |x509|
+            x509.tag!("ds:X509Certificate", x509_certificate)
           end
         end
       end
@@ -67,7 +52,7 @@ module SamlIdp
 
     def build_name_id_formats(el)
       name_id_formats.each do |format|
-        el.NameIDFormat format
+        el.tag!("md:NameIDFormat", format)
       end
     end
     private :build_name_id_formats
@@ -77,42 +62,43 @@ module SamlIdp
         next unless ep[:url].present?
 
         el.tag! ep[:tag],
-          Binding: "urn:oasis:names:tc:SAML:2.0:bindings:#{ep[:bind]}",
-          Location: ep[:url]
+                Binding: "urn:oasis:names:tc:SAML:2.0:bindings:#{ep[:bind]}",
+                Location: ep[:url]
       end
     end
     private :build_endpoint
 
     def build_attribute(el)
       attributes.each do |attribute|
-        el.tag! "saml:Attribute",
-          NameFormat: attribute.name_format,
-          Name: attribute.name,
-          FriendlyName: attribute.friendly_name do |attribute_xml|
-            attribute.values.each do |value|
-              attribute_xml.tag! "saml:AttributeValue", value
-            end
+        el.tag!("saml2:Attribute",
+                "xmlns:saml2" => Saml::XML::Namespaces::ASSERTION,
+                NameFormat: attribute.name_format,
+                Name: attribute.name,
+                FriendlyName: attribute.friendly_name) do |attribute_xml|
+          attribute.values.each do |value|
+            attribute_xml.tag!("saml2:AttributeValue", value)
           end
+        end
       end
     end
     private :build_attribute
 
     def build_organization(el)
-      el.Organization do |organization|
-        organization.OrganizationName organization_name, "xml:lang" => "en"
-        organization.OrganizationDisplayName organization_name, "xml:lang" => "en"
-        organization.OrganizationURL organization_url, "xml:lang" => "en"
+      el.tag!("md:Organization") do |organization|
+        organization.tag!("md:OrganizationName", organization_name, "xml:lang" => "en")
+        organization.tag!("md:OrganizationDisplayName", organization_name, "xml:lang" => "en")
+        organization.tag!("md:OrganizationURL", organization_url, "xml:lang" => "en")
       end
     end
     private :build_organization
 
     def build_contact(el)
-      el.ContactPerson contactType: "technical" do |contact|
-        contact.Company         technical_contact.company         if technical_contact.company
-        contact.GivenName       technical_contact.given_name      if technical_contact.given_name
-        contact.SurName         technical_contact.sur_name        if technical_contact.sur_name
-        contact.EmailAddress    technical_contact.mail_to_string  if technical_contact.mail_to_string
-        contact.TelephoneNumber technical_contact.telephone       if technical_contact.telephone
+      el.tag!("md:ContactPerson", contactType: "technical") do |contact|
+        contact.tag!("md:Company",         technical_contact.company)         if technical_contact.company
+        contact.tag!("md:GivenName",       technical_contact.given_name)      if technical_contact.given_name
+        contact.tag!("md:SurName",         technical_contact.sur_name)        if technical_contact.sur_name
+        contact.tag!("md:EmailAddress",    technical_contact.mail_to_string)  if technical_contact.mail_to_string
+        contact.tag!("md:TelephoneNumber", technical_contact.telephone)       if technical_contact.telephone
       end
     end
     private :build_contact
@@ -152,18 +138,18 @@ module SamlIdp
     private :raw_algorithm
 
     def x509_certificate
-      certificate = SamlIdp.config.x509_certificate.is_a?(Proc) ? SamlIdp.config.x509_certificate.call : SamlIdp.config.x509_certificate
+      certificate = configurator.x509_certificate.is_a?(Proc) ? configurator.x509_certificate.call : configurator.x509_certificate
       certificate
-      .to_s
-      .gsub(/-----BEGIN CERTIFICATE-----/,"")
-      .gsub(/-----END CERTIFICATE-----/,"")
-      .gsub(/\n/, "")
+        .to_s
+        .gsub(/-----BEGIN CERTIFICATE-----/,"")
+        .gsub(/-----END CERTIFICATE-----/,"")
+        .gsub(/\n/, "")
     end
 
     alias_method :public_cert, :x509_certificate
 
     def private_key
-      SamlIdp.config.secret_key
+      configurator.secret_key
     end
 
     def pv_key_password

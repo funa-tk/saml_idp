@@ -14,7 +14,7 @@ module SamlIdp
       builder.tag! "ds:Signature", "xmlns:ds" => "http://www.w3.org/2000/09/xmldsig#" do |signature|
         signature << signed_info
         signature.tag! "ds:SignatureValue", signature_value
-        signature.KeyInfo xmlns: "http://www.w3.org/2000/09/xmldsig#" do |key_info|
+        signature.tag! "ds:KeyInfo" do |key_info|
           key_info.tag! "ds:X509Data" do |x509|
             x509.tag! "ds:X509Certificate", der_certificate
           end
