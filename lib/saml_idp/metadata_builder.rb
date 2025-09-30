@@ -19,8 +19,6 @@ module SamlIdp
         builder.tag!("md:EntityDescriptor",
                      ID: reference_string,
                      "xmlns:md" => Saml::XML::Namespaces::METADATA,
-                     "xmlns:saml" => Saml::XML::Namespaces::ASSERTION,
-                     "xmlns:ds" => Saml::XML::Namespaces::SIGNATURE,
                      entityID: entity_id ) do |entity|
           sign entity
 
@@ -55,7 +53,7 @@ module SamlIdp
 
     def build_name_id_formats(el)
       name_id_formats.each do |format|
-        el.NameIDFormat format
+        el.tag!("md:NameIDFormat", format)
       end
     end
     private :build_name_id_formats
@@ -73,12 +71,13 @@ module SamlIdp
 
     def build_attribute(el)
       attributes.each do |attribute|
-        el.tag! "saml:Attribute",
+        el.tag!("saml2:Attribute",
+                "xmlns:saml2" => Saml::XML::Namespaces::ASSERTION,
                 NameFormat: attribute.name_format,
                 Name: attribute.name,
-                FriendlyName: attribute.friendly_name do |attribute_xml|
+                FriendlyName: attribute.friendly_name) do |attribute_xml|
           attribute.values.each do |value|
-            attribute_xml.tag! "saml:AttributeValue", value
+            attribute_xml.tag!("saml2:AttributeValue", value)
           end
         end
       end
@@ -86,21 +85,21 @@ module SamlIdp
     private :build_attribute
 
     def build_organization(el)
-      el.Organization do |organization|
-        organization.OrganizationName organization_name, "xml:lang" => "en"
-        organization.OrganizationDisplayName organization_name, "xml:lang" => "en"
-        organization.OrganizationURL organization_url, "xml:lang" => "en"
+      el.tag!("md:Organization") do |organization|
+        organization.tag!("md:OrganizationName", organization_name, "xml:lang" => "en")
+        organization.tag!("md:OrganizationDisplayName", organization_name, "xml:lang" => "en")
+        organization.tag!("md:OrganizationURL", organization_url, "xml:lang" => "en")
       end
     end
     private :build_organization
 
     def build_contact(el)
-      el.ContactPerson contactType: "technical" do |contact|
-        contact.Company         technical_contact.company         if technical_contact.company
-        contact.GivenName       technical_contact.given_name      if technical_contact.given_name
-        contact.SurName         technical_contact.sur_name        if technical_contact.sur_name
-        contact.EmailAddress    technical_contact.mail_to_string  if technical_contact.mail_to_string
-        contact.TelephoneNumber technical_contact.telephone       if technical_contact.telephone
+      el.tag!("md:ContactPerson", contactType: "technical") do |contact|
+        contact.tag!("md:Company",         technical_contact.company)         if technical_contact.company
+        contact.tag!("md:GivenName",       technical_contact.given_name)      if technical_contact.given_name
+        contact.tag!("md:SurName",         technical_contact.sur_name)        if technical_contact.sur_name
+        contact.tag!("md:EmailAddress",    technical_contact.mail_to_string)  if technical_contact.mail_to_string
+        contact.tag!("md:TelephoneNumber", technical_contact.telephone)       if technical_contact.telephone
       end
     end
     private :build_contact
