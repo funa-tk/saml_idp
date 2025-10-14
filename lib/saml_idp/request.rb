@@ -68,6 +68,10 @@ module SamlIdp
       end
     end
 
+    def protocol_binding
+      authn_request["ProtocolBinding"]&.to_s
+    end
+
     def acs_url
       authn_request["AssertionConsumerServiceURL"].to_s
     end
