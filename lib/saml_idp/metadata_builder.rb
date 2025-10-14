@@ -31,6 +31,7 @@ module SamlIdp
             build_name_id_formats descriptor
             build_endpoint descriptor, [
               { tag: 'md:SingleSignOnService', url: single_service_post_location, bind: 'HTTP-POST' },
+              { tag: 'md:SingleSignOnService', url: single_service_redirect_location, bind: 'HTTP-Redirect' },
             ]
             build_attribute descriptor
           end
